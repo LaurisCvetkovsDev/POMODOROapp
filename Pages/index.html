@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro App</title>
+    <link rel="icon" type="image/x-icon" href="./assets/icon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="./assets/icon.ico">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <!-- Logo at the top center -->
+    <div class="logo">
+        <img src="./assets/Comp 1.gif" alt="Pomodoro Logo">
+    </div>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <!-- Video container -->
+        <div class="video-container fade-in">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/ly36kn0ug4k?si=vbymeVYcEWV-IE4K" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+
+        <!-- Download button -->
+        <a href="https://github.com/LaurisCvetkovsDev/POMODOROapp/releases/download/1.0.1/ultraPOMODORO365plus-Setup-1.0.0.exe" 
+           class="download-button fade-in" 
+           download>
+            📥 Download App
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Pomodoro App. All rights reserved.</p>
+        <div class="social-links">
+            <a href="https://www.instagram.com/resident_pepe/" target="_blank">
+                📷 Instagram
+            </a>
+            <a href="https://github.com/LaurisCvetkovsDev/POMODOROapp" target="_blank">
+                💻 GitHub
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth animation on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '1';
+                }, index * 200);
+            });
+        });
+
+        // Function to open YouTube video
+        function openYouTubeVideo() {
+            window.open('https://www.youtube.com/watch?v=BT4WzyT2g8k', '_blank');
+        }
+
+        // Add click animation for download button
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadButton = document.querySelector('.download-button');
+            if (downloadButton) {
+                downloadButton.addEventListener('click', function(e) {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            }
+        });
+
+        // Add click animation for video preview
+        document.addEventListener('DOMContentLoaded', function() {
+            const videoPreview = document.querySelector('.video-preview');
+            if (videoPreview) {
+                videoPreview.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

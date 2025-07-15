@@ -1,9 +1,7 @@
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 
 
-// const API_URL = 'http://localhost/POMODOROapp/backend/api'; // Local WAMP server
-// const API_URL = 'https://laucve1.dreamhosters.com/backend_pomodoro/api';
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URLж
 const TESTING_MODE = false; // Enable analytics for checking
 
 export interface DayActivity {

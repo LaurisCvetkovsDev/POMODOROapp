@@ -1,6 +1,5 @@
 import { User, PomodoroSession, Friend } from '../types';
 
-//const API_URL = 'http://localhost/POMODOROapp/backend/api'; // Local WAMP server
 const API_URL = import.meta.env.VITE_API_URL;
     
 
