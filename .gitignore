@@ -1,0 +1,63 @@
+# ───── Environment Variables ─────
+.env
+.env.local
+.env.*.local
+
+# ───── Logs ─────
+*.log
+error.log
+access.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Electron build outputs
+release/
+release-new/
+*.exe
+*.asar
+
+# ───── Temporary / Cache Files ─────
+*.tmp
+*.temp
+*.cache
+cache/
+.vite/
+.parcel-cache/
+
+# ───── Backup Files ─────
+*.bak
+*.backup
+
+# ───── IDE / Editor Files ─────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ───── OS Generated Files ─────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ───── PHP: Composer ─────
+vendor/
+composer.lock
+
+# ───── React: Node.js ─────
+node_modules/
+dist/
+build/
+
+# ───── Upload Directories ─────
+uploads/
+files/
+
+# ───── Project-Specific Files ─────
+backend/config/cors.php 
+backend/BACKEND_ARCHITECTURE.md
+backend/sql/

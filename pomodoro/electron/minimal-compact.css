@@ -1,0 +1,151 @@
+body {
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.background {
+  width: 100%;
+  height: 100%;
+  background: url('../src/assets/img1.gif') center/cover;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.background::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(35, 39, 47, 0.7);
+  border-radius: 8px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.header {
+  width: 100%;
+  height: 28px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  -webkit-app-region: drag;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: #111;
+  font-size: 18px;
+  margin-right: 8px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 2;
+}
+
+.phase-indicator {
+  color: #ff6b6b;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 2;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.timer {
+  font-size: 1.8rem;
+  margin: 4px 0;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  font-family: 'Share Tech Mono', monospace;
+  color: wheat;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+  position: relative;
+  z-index: 2;
+}
+
+.control-btn {
+  background: wheat;
+  border: none;
+  color: #111;
+  font-size: 1rem;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 2;
+}
+
+.control-btn:hover {
+  background: #ffe4b5;
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-button {
+  background: wheat;
+  border: none;
+  color: #111;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  position: relative;
+  z-index: 2;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-button:hover {
+  opacity: 1;
+  background: #ffe4b5;
+}
+
+/* Make emoji and SVG icons black */
+.control-btn, .settings-button {
+  font-family: 'Share Tech Mono', monospace;
+  color: #111 !important;
+}
+
+.control-btn svg, .settings-button svg {
+  fill: #111 !important;
+  color: #111 !important;
+} 

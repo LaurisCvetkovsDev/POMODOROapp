@@ -1,0 +1,17 @@
+{
+    "name": "no-tpont1ff/backend",
+    "autoload": {
+        "psr-4": {
+            "NoTpont1ff\\Backend\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lauris",
+            "email": "Lauris2232@gmail.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}

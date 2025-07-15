@@ -1,0 +1,214 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+@font-face {
+    font-family: "ShareTechMono";   
+        src: local("ShareTechMono-Regular"),
+      url("./assets/ShareTechMono-Regular.ttf") format("truetype"),
+      url("/ShareTechMono-Regular.ttf") format("truetype");
+  }
+  #root{
+    font-family: "ShareTechMono", monospace;
+    color:wheat !important;
+  }
+ 
+/* Compact mode styles */
+.stopWatch.compact-mode {
+  padding: 15px;
+  background: url('./assets/img1.gif') center/cover;
+  background-size: cover;
+  background-position: center;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  position: relative;
+  width: 210px;
+  height: 155px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Ensure the body and html are transparent for compact mode */
+body.compact-mode, 
+html.compact-mode {
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+}
+
+#root.compact-mode {
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Add overlay for better text readability */
+.stopWatch.compact-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  z-index: 1;
+}
+
+/* Ensure content is above the overlay */
+.stopWatch.compact-mode > * {
+  position: relative;
+  z-index: 2;
+}
+
+.stopWatch.compact-mode .controls {
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.stopWatch.compact-mode .controls button {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+
+.stopWatch.compact-mode .phase-indicator {
+  margin-bottom: 5px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.stopWatch.compact-mode .display {
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Make the compact window draggable */
+.stopWatch.compact-mode {
+  -webkit-app-region: drag;
+}
+
+.stopWatch.compact-mode .controls button {
+  -webkit-app-region: no-drag;
+}
+
+/* Special styling for the restore button */
+.compact-restore-btn {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.compact-restore-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.05);
+}
+
+/* Custom Dark Theme Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #0f1419 0%, #161b22 50%, #0f1419 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #F5DEB3 0%, #DEB887 50%, #D2B48C 100%);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  box-shadow: 
+    inset 0 0 8px rgba(245, 222, 179, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #FFEBCD 0%, #F5DEB3 50%, #DEB887 100%);
+  box-shadow: 
+    inset 0 0 12px rgba(245, 222, 179, 0.5),
+    0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #D2B48C 0%, #BC9A6A 50%, #A0845C 100%);
+  box-shadow: 
+    inset 0 0 8px rgba(245, 222, 179, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+::-webkit-scrollbar-corner {
+  background: linear-gradient(135deg, #0f1419 0%, #161b22 100%);
+  border-radius: 4px;
+}
+
+/* Firefox scrollbar */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #F5DEB3 #161b22;
+}
+
+/* For containers with specific scrollbars - Compact Dark Theme */
+.chart-content,
+.heatmap-wrapper,
+.friends-list,
+.stats-grid,
+.tab-content {
+  scrollbar-width: thin;
+  scrollbar-color: #DEB887 #161b22;
+}
+
+.chart-content::-webkit-scrollbar,
+.heatmap-wrapper::-webkit-scrollbar,
+.friends-list::-webkit-scrollbar,
+.stats-grid::-webkit-scrollbar,
+.tab-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.chart-content::-webkit-scrollbar-track,
+.heatmap-wrapper::-webkit-scrollbar-track,
+.friends-list::-webkit-scrollbar-track,
+.stats-grid::-webkit-scrollbar-track,
+.tab-content::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #0f1419 0%, #161b22 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.chart-content::-webkit-scrollbar-thumb,
+.heatmap-wrapper::-webkit-scrollbar-thumb,
+.friends-list::-webkit-scrollbar-thumb,
+.stats-grid::-webkit-scrollbar-thumb,
+.tab-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #DEB887 0%, #D2B48C 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(245, 222, 179, 0.2);
+  box-shadow: inset 0 0 4px rgba(245, 222, 179, 0.2);
+  transition: all 0.2s ease;
+}
+
+.chart-content::-webkit-scrollbar-thumb:hover,
+.heatmap-wrapper::-webkit-scrollbar-thumb:hover,
+.friends-list::-webkit-scrollbar-thumb:hover,
+.stats-grid::-webkit-scrollbar-thumb:hover,
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #F5DEB3 0%, #DEB887 100%);
+  box-shadow: inset 0 0 6px rgba(245, 222, 179, 0.4);
+  border-color: rgba(245, 222, 179, 0.4);
+}
+
+
+ 
