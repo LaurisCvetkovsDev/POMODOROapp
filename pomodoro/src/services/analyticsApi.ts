@@ -1,7 +1,7 @@
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 
 
-const API_URL = import.meta.env.VITE_API_URLж
+const API_URL = import.meta.env.VITE_API_URL;
 const TESTING_MODE = false; // Enable analytics for checking
 
 export interface DayActivity {

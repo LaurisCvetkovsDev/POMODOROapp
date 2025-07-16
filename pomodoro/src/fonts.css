@@ -8,8 +8,7 @@
     local('ShareTechMono-Regular'),
     local('Share Tech Mono'),
     url('./assets/ShareTechMono-Regular.ttf') format('truetype'),
-    url('/ShareTechMono-Regular.ttf') format('truetype'),
-    url('https://fonts.gstatic.com/s/sharetechmono/v15/J7aHnp1uDWRBEqV98dVQztYldFcLowEF.woff2') format('woff2');
+    url('/ShareTechMono-Regular.ttf') format('truetype');
 }
 
 /* Ensure the font is applied globally */

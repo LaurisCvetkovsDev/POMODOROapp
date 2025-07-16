@@ -180,6 +180,10 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      enableRemoteModule: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
       preload: path.join(__dirname, 'preload.cjs'),
     },
     icon: path.join(__dirname, '../src/assets/icon.ico'),
@@ -223,6 +227,10 @@ function createCompactWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      enableRemoteModule: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
       preload: path.join(__dirname, 'preload.cjs'),
     },
     icon: path.join(__dirname, '../src/assets/icon.ico'),
