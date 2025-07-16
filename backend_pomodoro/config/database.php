@@ -3,10 +3,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-// Загружаем .env файл
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
-
 class Database
 {
     private $host;
@@ -18,11 +14,14 @@ class Database
 
     public function __construct()
     {
-        // Используем переменные окружения из .env
-        $this->host = $_ENV["DB_HOST"];
-        $this->db_name = $_ENV["DB_NAME"];
-        $this->username = $_ENV["DB_USERNAME"];
-        $this->password = $_ENV["DB_PASSWORD"];
+        // Загружаем .env переменные
+        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv->load();
+
+        $this->host = $_ENV['DB_HOST'];
+        $this->db_name = $_ENV['DB_NAME'];
+        $this->username = $_ENV['DB_USERNAME'];
+        $this->password = $_ENV['DB_PASSWORD'];
     }
 
     public function getConnection()

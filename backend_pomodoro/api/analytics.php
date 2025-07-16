@@ -1,9 +1,17 @@
 <?php
-include_once '../config/cors.php';
 require_once '../config/database.php';
 
 // Устанавливаем временную зону для корректной работы с датами
 date_default_timezone_set('Europe/Moscow');
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
 
 // Подключение к базе данных
 $database = new Database();

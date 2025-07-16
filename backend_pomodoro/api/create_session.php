@@ -1,8 +1,19 @@
 <?php
-include_once '../config/cors.php';
-
 // Устанавливаем временную зону для корректной работы с датами
 date_default_timezone_set('Europe/Moscow');
+
+// Set headers for CORS
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: POST, OPTIONS"); // Include OPTIONS
+header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // Log that the script is accessed
 error_log("create_session.php accessed.");
