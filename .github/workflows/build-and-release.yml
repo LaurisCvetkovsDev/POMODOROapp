@@ -1,0 +1,101 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.0.7)"
+        required: true
+        default: "1.0.7"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        node-version: [18.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build Electron app
+        run: npm run electron-pack
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-builds-${{ matrix.os }}
+          path: |
+            release/
+            dist/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/electron-builds-windows-latest/release/*.exe
+            artifacts/electron-builds-windows-latest/release/*.yml
+            artifacts/electron-builds-windows-latest/release/*.blockmap
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: Release ${{ github.event.inputs.version || github.ref_name }}
+          body: |
+            ## Что нового в версии ${{ github.event.inputs.version || github.ref_name }}
+
+            ### 🚀 Автоматические обновления
+            - Добавлена система автоматических обновлений
+            - Уведомления о доступных обновлениях
+            - Автоматическая установка обновлений
+
+            ### 🔧 Улучшения
+            - Улучшена производительность
+            - Исправлены мелкие ошибки
+
+            ### 📦 Установка
+            1. Скачайте установщик для Windows
+            2. Запустите файл и следуйте инструкциям
+            3. Приложение автоматически обновится при наличии новых версий
+
+            ### 🔄 Обновления
+            Приложение теперь автоматически проверяет обновления при запуске и уведомляет о новых версиях.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

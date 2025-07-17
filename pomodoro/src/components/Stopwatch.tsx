@@ -212,7 +212,11 @@ function CountdownTimer() {
   useEffect(() => {
     if (!window.electronAPI?.onTimerSync) return;
 
-    const handleTimerSync = (update: TimerUpdate) => {
+    const handleTimerSync = (update: {
+      timeLeft: number;
+      isRunning: boolean;
+      isWorkPhase: boolean;
+    }) => {
       const now = Date.now();
       if (now - lastSyncRef.current < 300) return; // Throttle
       lastSyncRef.current = now;
