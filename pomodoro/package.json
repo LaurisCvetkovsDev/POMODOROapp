@@ -2,7 +2,7 @@
   "homepage": "http://NOTpont1ff.github.io/pomodoro",
   "name": "pomodoro-app",
   "private": true,
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "ultraPOMODORO365plus - A powerful productivity timer application using the Pomodoro Technique",
   "author": "ultraPOMODORO365plus Team",
   "main": "electron/main.js",
