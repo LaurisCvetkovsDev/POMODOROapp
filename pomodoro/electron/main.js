@@ -1,359 +1,236 @@
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog, Notification } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
-let isDev = false;
+const isDev = require('electron-is-dev');
 
-try {
-  isDev = require('electron-is-dev');
-} catch (_) {
-  isDev = false;
-}
+// Конфигурация автообновлений
+autoUpdater.checkForUpdatesAndNotify();
+
+// Логирование автообновлений
+autoUpdater.logger = require('electron-log');
+autoUpdater.logger.transports.file.level = 'info';
 
 let mainWindow;
-let compactWindow;
 
-// Taimera stāvoklis, ko pārvalda galvenais process
-let timerState = {
-  timeLeft: 0, // Tiks inicializēts no renderētāja iestatījumiem
-  isRunning: false,
-  isWorkPhase: true,
-  workDuration: 0, // Tiks iestatīts no renderētāja iestatījumiem
-  shortBreakDuration: 0, // Tiks iestatīts no renderētāja iestatījumiem
-  initialized: false // Izseko, vai iestatījumi ir saņemti no renderētāja
-};
-let timerInterval = null;
-
-// Ierobežošana, lai novērstu ātrus atjauninājumus
-let lastUpdateTime = 0;
-const UPDATE_THROTTLE_MS = 200;
-
-// Karogs, lai izsekotu minimizēšanas/atjaunošanas operācijas
-let isMinimizeRestoreInProgress = false;
-
-// Taimera pārvaldības funkcijas
-function startTimer() {
-  if (!timerState.isRunning && timerState.timeLeft > 0) {
-    timerState.isRunning = true;
-    
-    timerInterval = setInterval(() => {
-      timerState.timeLeft--;
-      broadcastTimerUpdate();
-      
-      if (timerState.timeLeft <= 0) {
-        handleTimerCompletion();
-      }
-    }, 1000);
-    
-    broadcastTimerUpdate();
-  }
-}
-
-function pauseTimer() {
-  timerState.isRunning = false;
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-  broadcastTimerUpdate();
-}
-
-function resetTimer() {
-  timerState.isRunning = false;
-  
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-  
-  // Atiestatīt uz pašreizējās fāzes ilgumu
-  timerState.timeLeft = timerState.isWorkPhase ? 
-    timerState.workDuration * 60 : 
-    timerState.shortBreakDuration * 60;
-    
-  broadcastTimerUpdate();
-}
-
-function handleTimerCompletion() {
-  timerState.isRunning = false;
-  
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
-  if (timerState.isWorkPhase) {
-    // Darbs pabeigts → Pārslēgt uz pārtraukuma fāzi, bet nestartēt automātiski
-    timerState.isWorkPhase = false;
-    timerState.timeLeft = timerState.shortBreakDuration * 60;
-  } else {
-    // Pārtraukums pabeigts → Pārslēgt uz darba fāzi un apstāties
-    timerState.isWorkPhase = true;
-    timerState.timeLeft = timerState.workDuration * 60;
-  }
-  
-  broadcastTimerUpdate();
-}
-
-function updateTimerState(timeLeft, isRunning) {
-  // Izlaist atjauninājumus minimizēšanas/atjaunošanas operāciju laikā
-  if (isMinimizeRestoreInProgress) {
-    return;
-  }
-
-  // Ierobežot ātrus atjauninājumus, lai novērstu svārstības
-  const now = Date.now();
-  if (now - lastUpdateTime < UPDATE_THROTTLE_MS) {
-    return;
-  }
-  lastUpdateTime = now;
-
-  const oldTimeLeft = timerState.timeLeft;
-  timerState.timeLeft = timeLeft;
-  
-  if (isRunning && !timerState.isRunning) {
-    // Startēt taimeri no renderētāja
-    timerState.isRunning = true;
-    
-    if (!timerInterval && timeLeft > 0) {
-      timerInterval = setInterval(() => {
-        timerState.timeLeft--;
-        broadcastTimerUpdate();
-        
-        if (timerState.timeLeft <= 0) {
-          handleTimerCompletion();
-        }
-      }, 1000);
-    }
-  } else if (!isRunning && timerState.isRunning) {
-    // Apturēt taimeri no renderētāja
-    timerState.isRunning = false;
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      timerInterval = null;
-    }
-  }
-  
-  // Pārraidīt tikai, ja tas ir nozīmīgas izmaiņas
-  if (oldTimeLeft !== timeLeft || timerState.isRunning !== isRunning) {
-    broadcastTimerUpdate();
-  }
-}
-
-function updateTimerSettings(workDuration, breakDuration) {
-  timerState.workDuration = workDuration;
-  timerState.shortBreakDuration = breakDuration;
-  
-  // Ja šī ir pirmā reize, kad saņemam iestatījumus (inicializācija)
-  if (!timerState.initialized) {
-    timerState.timeLeft = timerState.isWorkPhase ? workDuration * 60 : breakDuration * 60;
-    timerState.initialized = true;
-  }
-  // Ja taimeris nedarbojas, atjaunināt uz jauno ilgumu pašreizējai fāzei
-  else if (!timerState.isRunning) {
-    const newTimeLeft = timerState.isWorkPhase ? workDuration * 60 : breakDuration * 60;
-    timerState.timeLeft = newTimeLeft;
-  }
-}
-
-function broadcastTimerUpdate() {
-  const update = {
-    timeLeft: timerState.timeLeft,
-    isRunning: timerState.isRunning,
-    isWorkPhase: timerState.isWorkPhase
-  };
-  
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('timer-sync', update);
-  }
-  if (compactWindow && !compactWindow.isDestroyed()) {
-    compactWindow.webContents.send('timer-sync', update);
-  }
-}
-
+// Создание главного окна
 function createWindow() {
-  mainWindow = new BrowserWindow({
-    title: 'ultraPOMODORO365plus',
-    width: 1000,
-    height: 700,
-    minWidth: 900,
-    minHeight: 650,
-    autoHideMenuBar: true, // Hide the menu bar
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-      experimentalFeatures: false,
-      preload: path.join(__dirname, 'preload.cjs'),
-    },
-    icon: path.join(__dirname, '../src/assets/icon.ico'),
-  });
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        minWidth: 800,
+        minHeight: 600,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            enableRemoteModule: false,
+            preload: path.join(__dirname, 'preload.js')
+        },
+        icon: path.join(__dirname, '../src/assets/icon.ico'),
+        show: false,
+        titleBarStyle: 'default'
+    });
 
-  // Ielādēt lietotni
-  mainWindow.loadURL(
-    isDev
-      ? 'http://localhost:5173'
-      : `file://${path.join(__dirname, '../dist/index.html')}`
-  );
-
-  // Atvērt DevTools izstrādes režīmā
-  if (isDev) {
-    mainWindow.webContents.openDevTools();
-  }
-
-  // Sūtīt taimera stāvokli, kad galvenais logs ir gatavs
-  mainWindow.webContents.once('did-finish-load', () => {
-    setTimeout(() => {
-      broadcastTimerUpdate();
-    }, 500);
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
-
-function createCompactWindow() {
-  compactWindow = new BrowserWindow({
-    title: 'ultraPOMODORO365plus - Compact',
-    width: 320,
-    height: 160,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      webSecurity: true,
-      allowRunningInsecureContent: false,
-      experimentalFeatures: false,
-      preload: path.join(__dirname, 'preload.cjs'),
-    },
-    icon: path.join(__dirname, '../src/assets/icon.ico'),
-  });
-
-  compactWindow.loadURL(
-    isDev
-      ? 'http://localhost:5173/compact'
-      : `file://${path.join(__dirname, '../dist/compact.html')}`
-  );
-
-  if (isDev) {
-    compactWindow.webContents.openDevTools();
-  }
-
-  // Agresīvs sinhronizācijas paņēmiens - Sūtīt taimera stāvokli, kad kompaktais logs ir gatavs
-  compactWindow.webContents.once('did-finish-load', () => {
-    const currentState = {
-      timeLeft: timerState.timeLeft,
-      isRunning: timerState.isRunning,
-      isWorkPhase: timerState.isWorkPhase
-    };
+    // Загрузка приложения
+    const startUrl = isDev 
+        ? 'http://localhost:5173' 
+        : `file://${path.join(__dirname, '../dist/index.html')}`;
     
-    // Sūtīt stāvokli nekavējoties, vairākas reizes, lai nodrošinātu, ka tas pārraksta inicializāciju
-    compactWindow.webContents.send('timer-sync', currentState);
-    
-    setTimeout(() => {
-      compactWindow.webContents.send('timer-sync', currentState);
-    }, 100);
-    
-    setTimeout(() => {
-      compactWindow.webContents.send('timer-sync', currentState);
-    }, 500);
-    
-    setTimeout(() => {
-      compactWindow.webContents.send('timer-sync', currentState);
-    }, 1000);
-  });
+    mainWindow.loadURL(startUrl);
 
-  compactWindow.on('closed', () => {
-    compactWindow = null;
-    // Rādīt galveno logu, kad kompaktais logs ir aizvērts
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show();
-    }
-  });
-}
-
-app.whenReady().then(() => {
-  // Remove the application menu completely
-  Menu.setApplicationMenu(null);
-  createWindow();
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-
-// IPC apstrādātājs, lai minimizētu galveno logu un rādītu kompakto taimeri
-ipcMain.on('minimize-timer', () => {
-  // Iestatīt karogu, lai novērstu taimera stāvokļa traucējumus
-  isMinimizeRestoreInProgress = true;
-  
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.hide();
-    createCompactWindow(); 
-  }
-  
-  // Notīrīt karogu pēc īsa aiztura, lai ļautu kompaktajam logam ielādēties
-  setTimeout(() => {
-    isMinimizeRestoreInProgress = false;
-  }, 1000);
-});
-
-// IPC apstrādātājs taimera kontroles komandām
-ipcMain.on('timer-control', (_, command) => {
-  switch (command) {
-    case 'restore':
-      // Iestatīt karogu, lai novērstu taimera stāvokļa traucējumus atjaunošanas laikā
-      isMinimizeRestoreInProgress = true;
-      
-      // Aizvērt kompakto logu un rādīt galveno logu
-      if (compactWindow && !compactWindow.isDestroyed()) {
-        compactWindow.close();
-        compactWindow = null;
-      }
-      if (mainWindow && !mainWindow.isDestroyed()) {
+    // Показать окно когда готово
+    mainWindow.once('ready-to-show', () => {
         mainWindow.show();
-        mainWindow.focus();
-      }
-      
-      // Notīrīt karogu pēc īsa aiztura
-      setTimeout(() => {
-        isMinimizeRestoreInProgress = false;
-      }, 500);
-      break;
-    case 'start':
-      startTimer();
-      break;
-    case 'pause':
-      pauseTimer();
-      break;
-    case 'stop':
-    case 'reset':
-      resetTimer();
-      break;
-  }
+        
+        // Проверить обновления только в продакшене
+        if (!isDev) {
+            autoUpdater.checkForUpdatesAndNotify();
+        }
+    });
+
+    // Открытие внешних ссылок в браузере
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        shell.openExternal(url);
+        return { action: 'deny' };
+    });
+
+    // DevTools только в разработке
+    if (isDev) {
+        mainWindow.webContents.openDevTools();
+    }
+
+    // Создание меню
+    createMenu();
+}
+
+// Создание меню приложения
+function createMenu() {
+    const template = [
+        {
+            label: 'Файл',
+            submenu: [
+                {
+                    label: 'Проверить обновления',
+                    click: () => {
+                        autoUpdater.checkForUpdatesAndNotify();
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Выход',
+                    accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
+                    click: () => {
+                        app.quit();
+                    }
+                }
+            ]
+        },
+        {
+            label: 'Вид',
+            submenu: [
+                { role: 'reload', label: 'Перезагрузить' },
+                { role: 'forceReload', label: 'Принудительная перезагрузка' },
+                { role: 'toggleDevTools', label: 'Инструменты разработчика' },
+                { type: 'separator' },
+                { role: 'resetZoom', label: 'Обычный размер' },
+                { role: 'zoomIn', label: 'Увеличить' },
+                { role: 'zoomOut', label: 'Уменьшить' },
+                { type: 'separator' },
+                { role: 'togglefullscreen', label: 'Полный экран' }
+            ]
+        },
+        {
+            label: 'Помощь',
+            submenu: [
+                {
+                    label: 'О приложении',
+                    click: () => {
+                        dialog.showMessageBox(mainWindow, {
+                            type: 'info',
+                            title: 'О приложении',
+                            message: 'ultraPOMODORO365plus',
+                            detail: `Версия: ${app.getVersion()}\nПродуктивный таймер по технике Помодоро`
+                        });
+                    }
+                }
+            ]
+        }
+    ];
+
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+}
+
+// События автообновлений
+autoUpdater.on('checking-for-update', () => {
+    console.log('Проверка обновлений...');
 });
 
-// IPC apstrādātājs taimera stāvokļa atjauninājumiem no renderētāja
-ipcMain.on('timer-update', (_, timeLeft, isRunning) => {
-  updateTimerState(timeLeft, isRunning);
+autoUpdater.on('update-available', (info) => {
+    console.log('Обновление доступно:', info.version);
+    
+    // Показать уведомление
+    if (Notification.isSupported()) {
+        new Notification({
+            title: 'Доступно обновление',
+            body: `Новая версия ${info.version} скачивается...`,
+            icon: path.join(__dirname, '../src/assets/icon.ico')
+        }).show();
+    }
+
+    // Отправить в рендер процесс
+    if (mainWindow) {
+        mainWindow.webContents.send('update-available', info);
+    }
 });
 
-// IPC apstrādātājs taimera iestatījumu atjauninājumiem no renderētāja
-ipcMain.on('timer-settings-update', (_, workDuration, breakDuration) => {
-  updateTimerSettings(workDuration, breakDuration);
+autoUpdater.on('update-not-available', (info) => {
+    console.log('Обновления не найдены');
+});
+
+autoUpdater.on('error', (err) => {
+    console.error('Ошибка автообновления:', err);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    let logMessage = "Скорость загрузки: " + progressObj.bytesPerSecond;
+    logMessage = logMessage + ' - Загружено ' + progressObj.percent + '%';
+    logMessage = logMessage + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    console.log(logMessage);
+
+    // Отправить прогресс в рендер процесс
+    if (mainWindow) {
+        mainWindow.webContents.send('download-progress', progressObj);
+    }
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log('Обновление скачано:', info.version);
+    
+    // Показать диалог с предложением перезапуска
+    dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Обновление готово',
+        message: 'Обновление скачано и готово к установке',
+        detail: `Новая версия ${info.version} будет установлена после перезапуска приложения.`,
+        buttons: ['Перезапустить сейчас', 'Перезапустить позже'],
+        defaultId: 0
+    }).then((result) => {
+        if (result.response === 0) {
+            autoUpdater.quitAndInstall();
+        }
+    });
+});
+
+// IPC обработчики
+ipcMain.handle('check-for-updates', async () => {
+    if (!isDev) {
+        return await autoUpdater.checkForUpdatesAndNotify();
+    }
+    return null;
+});
+
+ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+});
+
+// События приложения
+app.whenReady().then(() => {
+    createWindow();
+
+    // macOS - создать окно если нет открытых
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow();
+        }
+    });
+});
+
+// Закрытие приложения
+app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});
+
+// Безопасность
+app.on('web-contents-created', (event, contents) => {
+    contents.on('new-window', (event, navigationUrl) => {
+        event.preventDefault();
+        shell.openExternal(navigationUrl);
+    });
+});
+
+// Автообновления при запуске (только в продакшене)
+app.on('ready', () => {
+    if (!isDev) {
+        // Проверить обновления через 10 секунд после запуска
+        setTimeout(() => {
+            autoUpdater.checkForUpdatesAndNotify();
+        }, 10000);
+
+        // Проверять обновления каждые 30 минут
+        setInterval(() => {
+            autoUpdater.checkForUpdatesAndNotify();
+        }, 30 * 60 * 1000);
+    }
 });

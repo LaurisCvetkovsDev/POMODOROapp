@@ -2,7 +2,7 @@
   "homepage": "http://NOTpont1ff.github.io/pomodoro",
   "name": "pomodoro-app",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "ultraPOMODORO365plus - A powerful productivity timer application using the Pomodoro Technique",
   "author": "ultraPOMODORO365plus Team",
   "main": "electron/main.js",
@@ -15,18 +15,23 @@
     "deploy": "gh-pages -d dist",
     "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron-pack": "electron-builder",
+    "electron-pack-publish": "npm run build && electron-builder --publish=always",
     "preelectron-pack": "npm run build",
     "start": "vite",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "publish": "electron-builder --publish=always",
+    "build-publish": "npm run build && electron-builder --publish=always"
   },
   "dependencies": {
     "@fontsource/share-tech-mono": "^5.1.1",
     "bootstrap": "^5.3.3",
     "boring-avatars": "^1.11.2",
     "date-fns": "^4.1.0",
+    "electron-log": "^5.4.1",
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^18.2.0",
@@ -47,6 +52,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
+    "dotenv": "^17.2.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
     "electron-is-dev": "^2.0.0",
@@ -74,14 +80,25 @@
       "buildResources": "src/assets",
       "output": "release"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "LaurisCvetkovsDev",
+        "repo": "POMODOROapp",
+        "private": false
+      }
+    ],
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "src/assets/icon.ico"
+      "icon": "src/assets/icon.ico",
+      "publisherName": "ultraPOMODORO365plus Team"
     },
     "nsis": {
       "oneClick": false,
@@ -101,14 +118,16 @@
       "target": [
         "dmg"
       ],
-      "icon": "src/assets/icon.icns"
+      "icon": "src/assets/icon.icns",
+      "category": "public.app-category.productivity"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "icon": "src/assets/icon.png"
+      "icon": "src/assets/icon.png",
+      "category": "Office"
     }
   }
 }

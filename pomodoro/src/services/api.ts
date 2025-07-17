@@ -1,7 +1,7 @@
 import { User, PomodoroSession, Friend } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
-    
+
 
 
 // Auth Services

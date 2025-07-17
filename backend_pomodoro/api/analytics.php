@@ -68,11 +68,11 @@ function getDailyActivity($pdo, $user_id)
     $start_date = date('Y-m-d', strtotime("-$days days"));
     $end_date = date('Y-m-d');
 
-    // Берем данные напрямую из pomodoro_sessions для точности
+    // Правильная логика: помодоро засчитывается только за полные 25 минут
     $sql = "
         SELECT 
             DATE(start_time) as date,
-            COUNT(CASE WHEN is_completed = 1 AND duration >= 1500 THEN 1 END) as count,
+            FLOOR(SUM(CASE WHEN is_completed = 1 THEN duration ELSE 0 END) / 60 / 25) as count,
             SUM(duration) / 60 as total_duration,
             AVG(CASE WHEN is_completed = 1 THEN 100 ELSE 0 END) as completion_rate
         FROM pomodoro_sessions 
@@ -122,7 +122,7 @@ function getHourlyActivity($pdo, $user_id, $days)
     $sql = "
         SELECT 
             HOUR(start_time) as hour,
-            COUNT(*) as count,
+            FLOOR(SUM(CASE WHEN is_completed = 1 THEN duration ELSE 0 END) / 60 / 25) as count,
             AVG(duration) / 60 as avg_focus_time
         FROM pomodoro_sessions 
         WHERE user_id = ? 
@@ -166,9 +166,9 @@ function getWeeklyStats($pdo, $user_id, $weeks)
         SELECT 
             YEARWEEK(start_time, 1) as yearweek,
             DATE(DATE_SUB(start_time, INTERVAL WEEKDAY(start_time) DAY)) as week_start,
-            COUNT(*) as total_pomodoros,
+            FLOOR(SUM(CASE WHEN is_completed = 1 THEN duration ELSE 0 END) / 60 / 25) as total_pomodoros,
             SUM(duration) / 60 as total_time,
-            COUNT(*) / 7 as avg_daily,
+            FLOOR(SUM(CASE WHEN is_completed = 1 THEN duration ELSE 0 END) / 60 / 25) / 7 as avg_daily,
             AVG(CASE WHEN is_completed = 1 THEN 100 ELSE 0 END) as completion_rate
         FROM pomodoro_sessions 
         WHERE user_id = ? 
@@ -287,35 +287,38 @@ function getFocusPatterns($pdo, $user_id)
 
 function getFriendsComparison($pdo, $user_id)
 {
-    // Получаем рейтинг пользователя среди друзей
+    // Получаем рейтинг пользователя среди друзей с правильной логикой подсчета
     $sql = "
         SELECT 
             COUNT(*) as total_friends,
             (
                 SELECT COUNT(*) 
                 FROM (
-                    SELECT ps.user_id, COUNT(*) as user_pomodoros
+                    SELECT ps.user_id, FLOOR(SUM(ps.duration) / 60 / 25) as user_pomodoros
                     FROM pomodoro_sessions ps
-                    JOIN friendships f ON (f.user_id = ps.user_id OR f.friend_id = ps.user_id)
+                    JOIN friends f ON (f.user_id = ps.user_id OR f.friend_id = ps.user_id)
                     WHERE (f.user_id = ? OR f.friend_id = ?) 
                     AND f.status = 'accepted'
+                    AND ps.is_completed = 1
                     AND ps.start_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                     GROUP BY ps.user_id
                     HAVING user_pomodoros > (
-                        SELECT COUNT(*) 
+                        SELECT FLOOR(SUM(duration) / 60 / 25)
                         FROM pomodoro_sessions 
                         WHERE user_id = ? 
+                        AND is_completed = 1
                         AND start_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)
                     )
                 ) as better_users
             ) + 1 as user_rank,
             (
-                SELECT COUNT(*) 
+                SELECT FLOOR(SUM(duration) / 60 / 25)
                 FROM pomodoro_sessions 
                 WHERE user_id = ? 
+                AND is_completed = 1
                 AND start_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)
             ) as user_score
-        FROM friendships 
+        FROM friends 
         WHERE (user_id = ? OR friend_id = ?) 
         AND status = 'accepted'
     ";

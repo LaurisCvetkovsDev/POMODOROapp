@@ -76,7 +76,8 @@ class PomodoroSession
 
     public function getTotalPomodoros($user_id)
     {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table_name . "
+        // Правильная логика: помодоро засчитывается только за полные 25 минут
+        $query = "SELECT FLOOR(SUM(duration) / 60 / 25) as total FROM " . $this->table_name . "
                 WHERE user_id = :user_id
                 AND is_completed = 1";
 
@@ -85,7 +86,7 @@ class PomodoroSession
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $row['total'];
+        return $row['total'] ?? 0;
     }
 }
 ?>

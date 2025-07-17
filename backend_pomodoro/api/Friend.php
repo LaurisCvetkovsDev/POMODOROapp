@@ -105,8 +105,8 @@ class Friend
                     u.avatar_url,
                     f.status,
                     f.created_at,
-                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id) as total_pomodoros,
-                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1) as total_pomodoros,
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1 AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
                 FROM " . $this->table_name . " f
                 JOIN users u ON (f.friend_id = u.id)
                 WHERE f.user_id = :user_id1 AND f.status = 'accepted'
@@ -119,8 +119,8 @@ class Friend
                     u.avatar_url,
                     f.status,
                     f.created_at,
-                    (SELECT COUNT(*) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1) as total_pomodoros,
-                    (SELECT COUNT(*) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1 AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1) as total_pomodoros,
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1 AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
                 FROM " . $this->table_name . " f
                 JOIN users u ON (f.user_id = u.id)
                 WHERE f.friend_id = :user_id2 AND f.status = 'accepted'
@@ -133,8 +133,8 @@ class Friend
                     u.avatar_url,
                     f.status,
                     f.created_at,
-                    (SELECT COUNT(*) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1) as total_pomodoros,
-                    (SELECT COUNT(*) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1 AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1) as total_pomodoros,
+                    (SELECT FLOOR(SUM(ps.duration) / 60 / 25) FROM pomodoro_sessions ps WHERE ps.user_id = u.id AND ps.is_completed = 1 AND DATE(ps.start_time) = CURDATE()) as daily_pomodoros
                 FROM " . $this->table_name . " f
                 JOIN users u ON (f.user_id = u.id)
                 WHERE f.friend_id = :user_id3 AND f.status = 'pending'
@@ -155,10 +155,10 @@ class Friend
             // Get today's date in Y-m-d format
             $today = date('Y-m-d');
 
-            // Query to get total and daily pomodoro counts (25 minutes = 1 pomodoro)
+            // Правильная логика: помодоро засчитывается только за полные 25 минут
             $query = "SELECT 
-                (SELECT FLOOR(SUM(duration) / 60 / 25) FROM pomodoro_sessions WHERE user_id = :user_id) as total_pomodoros,
-                (SELECT FLOOR(SUM(duration) / 60 / 25) FROM pomodoro_sessions WHERE user_id = :user_id AND DATE(start_time) = :today) as daily_pomodoros";
+                (SELECT FLOOR(SUM(duration) / 60 / 25) FROM pomodoro_sessions WHERE user_id = :user_id AND is_completed = 1) as total_pomodoros,
+                (SELECT FLOOR(SUM(duration) / 60 / 25) FROM pomodoro_sessions WHERE user_id = :user_id AND is_completed = 1 AND DATE(start_time) = :today) as daily_pomodoros";
 
             $stmt = $this->conn->prepare($query);
 

@@ -877,4 +877,75 @@ h2, h3 {
   transform: scale(1.1);
 }
 
+/* Update Notification Component */
+.update-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1050;
+  max-width: 350px;
+  min-width: 250px;
+}
+
+.update-notification .version-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.update-notification .version-info small {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.update-notification .version-info button {
+  font-size: 0.8rem;
+  text-decoration: none !important;
+  transition: transform 0.2s ease;
+}
+
+.update-notification .version-info button:hover {
+  transform: rotate(180deg);
+}
+
+.update-notification .alert {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  font-size: 0.875rem;
+}
+
+.update-notification .download-progress {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.update-notification .progress {
+  height: 6px;
+  border-radius: 3px;
+  margin-bottom: 5px;
+}
+
+.update-notification .progress-bar {
+  background: linear-gradient(90deg, #007bff, #0056b3);
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+  .update-notification {
+    bottom: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
+/* Скрыть в компактном режиме если мало места */
+.very-compact .update-notification {
+  display: none;
+}
+
 

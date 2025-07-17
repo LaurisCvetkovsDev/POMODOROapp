@@ -1,18 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose a safe API to the main window renderer
-contextBridge.exposeInMainWorld('electron', {
-  // Method to send minimize command to the main process
-  minimizeTimer: () => ipcRenderer.send('minimize-timer'),
-
-  // Method to send timer updates to the main process
-  sendTimerUpdate: (timeLeft, isRunning) => ipcRenderer.send('timer-update', timeLeft, isRunning),
-
-  // Method to receive restore command from the main process
-  onRestoreTimer: (callback) => ipcRenderer.on('restore-timer', (event) => callback()),
-
-  // Methods to send timer control commands to the main process (if Stopwatch.tsx sends these)
-  startTimer: () => ipcRenderer.send('start-timer'),
-  pauseTimer: () => ipcRenderer.send('pause-timer'),
-  resetTimer: () => ipcRenderer.send('reset-timer'),
+// Безопасный API для рендер процесса
+contextBridge.exposeInMainWorld('electronAPI', {
+    // Автообновления
+    checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+    
+    // События автообновлений
+    onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+    onDownloadProgress: (callback) => ipcRenderer.on('download-progress', callback),
+    onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
+    
+    // Удаление слушателей
+    removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 }); 

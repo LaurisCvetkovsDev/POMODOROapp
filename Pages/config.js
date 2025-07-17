@@ -29,7 +29,7 @@ class Config {
     getConfig() {
         const configs = {
             development: {
-                API_BASE_URL: 'http://localhost/POMODOROapp/backend/api/',
+                API_BASE_URL: 'http://localhost/POMODOROapp/backend_pomodoro/api/',
                 API_ENDPOINTS: {
                     LOGIN: 'login.php',
                     REGISTER: 'register.php',

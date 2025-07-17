@@ -26,6 +26,7 @@ import Navbar from "./components/Navbar";
 import TopNavigation from "./components/TopNavigation";
 import Stopwatch from "./components/Stopwatch";
 import FriendRequestNotification from "./components/FriendRequestNotification";
+import UpdateNotification from "./components/UpdateNotification";
 
 const App: React.FC = () => {
   const { checkAndResetDaily } = usePomodoroStore();
@@ -83,6 +84,7 @@ const App: React.FC = () => {
             <div className="app app-container">
               <Navbar />
               <FriendRequestNotification />
+              <UpdateNotification />
               <Routes>
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />
