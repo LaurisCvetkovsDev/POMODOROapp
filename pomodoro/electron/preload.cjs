@@ -37,6 +37,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
     });
   },
 
+  // Update controls
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
+  installUpdate: () => ipcRenderer.send('install-update'),
+  
+  // Update info
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  getUpdateInfo: () => ipcRenderer.invoke('get-update-info'),
+  
+  // Update status listeners
+  onUpdateStatus: (callback) => {
+    ipcRenderer.on('update-status', (_, status) => {
+      callback(status);
+    });
+  },
+
   // Remove listener (for cleanup)
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

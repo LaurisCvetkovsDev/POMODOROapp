@@ -21,6 +21,7 @@ import Goal from "./components/Goal";
 import Stats from "./components/Stats";
 import About from "./components/About";
 import TermsOfService from "./components/TermsOfService";
+import UpdateNotification from "./components/UpdateNotification";
 
 import Navbar from "./components/Navbar";
 import TopNavigation from "./components/TopNavigation";
@@ -83,6 +84,7 @@ const App: React.FC = () => {
             <div className="app app-container">
               <Navbar />
               <FriendRequestNotification />
+              <UpdateNotification />
               <Routes>
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/register" element={<RegisterForm />} />

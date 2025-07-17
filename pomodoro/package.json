@@ -2,10 +2,14 @@
   "homepage": "http://NOTpont1ff.github.io/pomodoro",
   "name": "pomodoro-app",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "ultraPOMODORO365plus - A powerful productivity timer application using the Pomodoro Technique",
   "author": "ultraPOMODORO365plus Team",
   "main": "electron/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LaurisCvetkovsDev/POMODOROapp"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -27,6 +31,8 @@
     "bootstrap": "^5.3.3",
     "boring-avatars": "^1.11.2",
     "date-fns": "^4.1.0",
+    "electron-log": "^5.4.1",
+    "electron-updater": "^6.6.2",
     "react": "^18.2.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^18.2.0",
@@ -78,7 +84,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "src/assets/icon.ico"
@@ -109,6 +117,15 @@
         "deb"
       ],
       "icon": "src/assets/icon.png"
-    }
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "LaurisCvetkovsDev",
+      "repo": "POMODOROapp",
+      "private": false,
+      "releaseType": "release"
+    },
+    "electronUpdaterCompatibility": ">=2.16",
+    "generateUpdatesFilesForAllChannels": true
   }
 }

@@ -5,33 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { pomodoroSessionService } from "../services/api";
 import pomodoroCompleteSound from "../assets/sounds/POMODOROdone2-1.mp3";
 import restCompleteSound from "../assets/sounds/RESTdone.mp3";
-
-// Electron API tipu definīcijas
-declare global {
-  interface Window {
-    electronAPI?: {
-      minimizeTimer: () => void;
-      restoreTimer: () => void;
-      startTimer: () => void;
-      pauseTimer: () => void;
-      resetTimer: () => void;
-      onRestore: (callback: () => void) => void;
-      sendTimerUpdate: (timeLeft: number, isRunning: boolean) => void;
-      updateTimerSettings: (
-        workDuration: number,
-        shortBreakDuration: number
-      ) => void;
-      onTimerSync: (
-        callback: (update: {
-          timeLeft: number;
-          isRunning: boolean;
-          isWorkPhase: boolean;
-        }) => void
-      ) => void;
-      removeAllListeners: (event: string) => void;
-    };
-  }
-}
+import { ElectronAPI, TimerUpdate } from "../types";
 
 function CountdownTimer() {
   // Pārbaudām vai ir kompaktais režīms
@@ -238,11 +212,7 @@ function CountdownTimer() {
   useEffect(() => {
     if (!window.electronAPI?.onTimerSync) return;
 
-    const handleTimerSync = (update: {
-      timeLeft: number;
-      isRunning: boolean;
-      isWorkPhase: boolean;
-    }) => {
+    const handleTimerSync = (update: TimerUpdate) => {
       const now = Date.now();
       if (now - lastSyncRef.current < 300) return; // Throttle
       lastSyncRef.current = now;

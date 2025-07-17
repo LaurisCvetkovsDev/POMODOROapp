@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 let isDev = false;
 
@@ -6,6 +7,73 @@ try {
   isDev = require('electron-is-dev');
 } catch (_) {
   isDev = false;
+}
+
+// Настройка автоматических обновлений
+function setupAutoUpdater() {
+  // Отключаем автоматические обновления в режиме разработки
+  if (isDev) {
+    console.log('Автообновления отключены в режиме разработки');
+    return;
+  }
+
+  // Настройка логирования для отладки
+  autoUpdater.logger = require('electron-log');
+  autoUpdater.logger.transports.file.level = 'info';
+
+  // Настройка событий обновлений
+  autoUpdater.on('checking-for-update', () => {
+    console.log('Проверка обновлений...');
+    sendStatusToWindow('Проверка обновлений...');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Доступно обновление:', info);
+    sendStatusToWindow('Доступно обновление! Загрузка...');
+  });
+
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('Обновлений не найдено:', info);
+    sendStatusToWindow('Обновлений не найдено');
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.log('Ошибка при обновлении:', err);
+    sendStatusToWindow('Ошибка при обновлении: ' + err.message);
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    let log_message = "Скорость загрузки: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Загружено ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    console.log(log_message);
+    sendStatusToWindow(log_message);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('Обновление загружено:', info);
+    sendStatusToWindow('Обновление загружено. Перезапуск приложения...');
+    
+    // Автоматически устанавливаем обновление через 1 секунду
+    setTimeout(() => {
+      autoUpdater.quitAndInstall();
+    }, 1000);
+  });
+
+  // Проверяем обновления при запуске (с задержкой в 3 секунды)
+  setTimeout(() => {
+    autoUpdater.checkForUpdatesAndNotify();
+  }, 3000);
+}
+
+// Функция для отправки статуса в окно приложения
+function sendStatusToWindow(text) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('update-status', text);
+  }
+  if (compactWindow && !compactWindow.isDestroyed()) {
+    compactWindow.webContents.send('update-status', text);
+  }
 }
 
 let mainWindow;
@@ -283,6 +351,7 @@ app.whenReady().then(() => {
   // Remove the application menu completely
   Menu.setApplicationMenu(null);
   createWindow();
+  setupAutoUpdater(); // Вызываем функцию настройки обновлений
 });
 
 app.on('window-all-closed', () => {
@@ -356,4 +425,36 @@ ipcMain.on('timer-update', (_, timeLeft, isRunning) => {
 // IPC apstrādātājs taimera iestatījumu atjauninājumiem no renderētāja
 ipcMain.on('timer-settings-update', (_, workDuration, breakDuration) => {
   updateTimerSettings(workDuration, breakDuration);
+});
+
+// IPC обработчики для обновлений
+ipcMain.on('check-for-updates', () => {
+  if (!isDev) {
+    autoUpdater.checkForUpdates();
+  }
+});
+
+ipcMain.on('download-update', () => {
+  if (!isDev) {
+    autoUpdater.downloadUpdate();
+  }
+});
+
+ipcMain.on('install-update', () => {
+  if (!isDev) {
+    autoUpdater.quitAndInstall();
+  }
+});
+
+// Получение информации о текущей версии
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
+
+// Получение информации о доступных обновлениях
+ipcMain.handle('get-update-info', () => {
+  return {
+    version: app.getVersion(),
+    isDev: isDev
+  };
 });
